@@ -7,7 +7,7 @@ from ear import Ear, WebModule
 ### begin logging stuff
 import logging
 
-#logging.basicConfig(format="%(message)s")
+logging.basicConfig(format="%(message)s")
 log = logging.getLogger(__name__)
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)

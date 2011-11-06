@@ -1,5 +1,4 @@
 import os, shutil
-from tomcat_ear import mkpath
 from zipfile import ZipFile
 from xml.dom.minidom import parseString
 
