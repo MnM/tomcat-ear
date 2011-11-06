@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.mnm.example</groupId>
+  <artifactId>example-parent</artifactId>
+  <version>1.0</version>
+  <packaging>pom</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+	<version>2.3.2</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-war-plugin</artifactId>
+	<version>2.1.1</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-ear-plugin</artifactId>
+	<version>2.6</version>
+        <configuration>
+          <version>6</version>
+          <defaultLibBundleDir>lib</defaultLibBundleDir>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <modules>
+    <module>example-api</module>
+    <module>example-web</module>
+    <module>example-ear</module>
+  </modules>
+
+</project>
