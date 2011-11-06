@@ -1,2 +1,2 @@
 #!/bin/sh
-python `dirname "$0"`/../lib/cli.py $@
+python -O3 `dirname "$0"`/../lib/cli.py $@

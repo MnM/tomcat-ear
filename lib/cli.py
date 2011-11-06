@@ -52,12 +52,12 @@ def resolve_paths(env):
 YES = ["y", "yes"]
 NO = ["n", "no"]
 
-def prompt(message, validate_input):
+def prompt(message, validate_input, convert=str):
     input = None
     while not validate_input(input):
         sys.stdout.write(message + " ")
         try:
-            input = raw_input()
+            input = convert(raw_input())
         except ValueError:
             pass
     return input
@@ -93,23 +93,22 @@ if __name__ == "__main__":
 
     print("These are the libraries contained in the EAR file, that need to be deployed:")
     print(pformat(ear.libraries) + "\n")
+    
+    print("Possible deployment targets are (read from catalina.properties):")
+    for tuple in zip(range(len(library_paths)), library_paths):
+        print("\t%s -> %s" % tuple)
 
-    # ask the user where he wants to deploy the libraries
-    library_path_index = None
-    while library_path_index not in range(len(library_paths)):
-        print("Where do you want the libraries to be deployed?")
-        for index, libpath in zip(range(len(library_paths)), library_paths):
-            print("%s -> %s" % (index, colourize(libpath, YELLOW)))
-        try:
-            library_path_index = int(raw_input())
-        except ValueError:
-            pass
-    library_path = library_paths[library_path_index]
+    index = prompt("Where do you want the libraries to be deployed?",
+                   lambda x: x in range(len(library_paths)),
+                   int)
+    library_path = library_paths[index]
 
+    # print summary and let user decide whether to continue
+    print("\nLibraries will be deployed here: %s" % colourize(library_path, YELLOW))
     web_path = path['catalina_deploy']
-    print("\nWeb modules will be deployed here: %s\n" % colourize(web_path, YELLOW))
-    print("If you want to deploy to a different directory, please set")
-    print("the CATALINA_DEPLOY environment variable.\n")
+    print("Web modules will be deployed here: %s\n" % colourize(web_path, YELLOW))
+    print("If you want to deploy the WEB(s) to a different directory, please")
+    print("set the CATALINA_DEPLOY environment variable.\n")
     
     if prompt("Do you want to continue? (yes|no)",
               lambda x: x in YES + NO) in NO:

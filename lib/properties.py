@@ -1,3 +1,5 @@
+from functools import reduce
+
 def p_empty_or_comment(line, comment='#'):
     """Predicate matching strings that are not empty and don't start
     with a comment character. For best results, the line should no
@@ -7,7 +9,7 @@ def p_empty_or_comment(line, comment='#'):
 def mreplace(s, replacements=[]):
     """Apply multiple replace operations to the string s. The
     replacements are a list of (old, new) tuples."""
-    return reduce(lambda x, rep: apply(x.replace, rep), replacements, s)
+    return reduce(lambda x, rep: x.replace(*rep), replacements, s)
 
 def split_and_replace(s, split=',', replace={}):
     # variable replacements use the format ${var}. Here, we build
