@@ -1,2 +1,4 @@
 #!/bin/sh
-python -Bt3 `dirname "$0"`/../lib/cli.py $@
+# resolve the absolute path of the executable (MacOS has no readlink)
+READLINK_F=`python -c 'import os,sys;print os.path.realpath(sys.argv[1])' "$0"`
+python -Bt3 `dirname $READLINK_F`/../lib/cli.py $@
