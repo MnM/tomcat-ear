@@ -62,6 +62,18 @@ def prompt(message, validate_input, convert=str):
             pass
     return input
 
+def overwrite_callback(dest, old_crc, new_crc):
+    if (old_crc == new_crc):
+        return False
+    else:
+        info("old_crc = %s, new_crc = %s" % (old_crc, new_crc))
+        return prompt("File %s already exists and differs, overwrite? (yes|no)" % dest,
+                  lambda x: x in YES + NO) in YES
+
+def write_obj(fn, obj, path, overwrite_callback):
+    wrote_file = fn(path, obj, overwrite_callback)
+    info("\t%s%s" % ("" if wrote_file else "SKIPPED ", obj))
+
 if __name__ == "__main__":
     log.setLevel(logging.INFO)
 
@@ -117,11 +129,9 @@ if __name__ == "__main__":
     # extract all library JARs
     info("Extracting libraries to %s..." % library_path)
     for library in ear.libraries:
-        info("\t%s" % library)
-        ear.extract_library(library_path, library)
+        write_obj(ear.extract_library, library, library_path, overwrite_callback)
 
     # extract all WEBs
     info("Extracting WEBs to %s..." % web_path)
     for module in filter(lambda x: isinstance(x, WebModule), ear.modules):
-        info("\t%s" % module.uri)
-        ear.extract_module(web_path, module)
+        write_obj(ear.extract_module, module, web_path, overwrite_callback)
