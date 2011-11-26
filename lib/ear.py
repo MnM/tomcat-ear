@@ -52,8 +52,11 @@ class Ear(object):
                 raise Exception("%s not found in EAR!" % module.uri)
 
     def __parse_application_xml(self):
-        with self.ear.open(self.application_xml_path) as f: # python 2.7
+        try:
+            f = self.ear.open(self.application_xml_path)
             return ApplicationDescriptor(parseString(f.read()))
+        finally:
+            f.close()
 
     def __extract_file(self, path, member, skipExisting=True):
         filename = os.path.basename(member)
