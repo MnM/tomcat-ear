@@ -22,7 +22,7 @@ servlet applications on the same server.
   `library-directory` element.
 
 ## Prerequisites
-- Python 2.7
+- Python 2.6
 - Maven 3
 - Tomcat 6 or 7
 
