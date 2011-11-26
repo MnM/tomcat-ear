@@ -1,4 +1,5 @@
 import os, shutil
+import zlib
 from zipfile import ZipFile
 from xml.dom.minidom import parseString
 
@@ -29,6 +30,13 @@ def children(node, tagname=None):
 
 def text_child1(node, tagname, default=None):
     return first_text(children(node, tagname), default)
+
+def crc32(filename):
+    "http://stackoverflow.com/questions/1742866/compute-crc-of-file-in-python"
+    prev = 0
+    for eachLine in open(filename,"rb"):
+        prev = zlib.crc32(eachLine, prev)
+    return prev & 0xFFFFFFFF
 
 class ZipMember(object):
     def __init__(self, zipinfo):
@@ -81,12 +89,18 @@ class Ear(object):
     def __open_zipmember(self, library):
         return self.ear.open(library.filename)
 
-    def __extract_file(self, path, zipmember, skipExisting=True):
+    def __extract_file(self, path, zipmember, overwrite_callback=None):
+        """Overwrites files if they exist. This can be disabled by
+        registering an 'overwrite_callback' function and returning
+        False."""
         filename = zipmember.basename
         target_path = os.path.join(path, filename)
 
-        if os.path.isfile(target_path) and skipExisting:
-            return # skip if it already exists
+        if os.path.isfile(target_path) and overwrite_callback != None:
+            target_crc = crc32(target_path)
+            cb = overwrite_callback(filename, target_crc, zipmember.crc)
+            if cb is False:
+                return False # skip file because the callback returned False
 
         if not os.path.exists(path):
             os.makedirs(path) # create target directory if it doesn't exist
@@ -99,13 +113,15 @@ class Ear(object):
             source.close()
             target.close()
 
-    def extract_library(self, path, library):
-        self.__extract_file(path, library)
+        return True # indicating success
 
-    def extract_module(self, path, module):
+    def extract_library(self, path, library, overwrite_callback=None):
+        return self.__extract_file(path, library, overwrite_callback)
+
+    def extract_module(self, path, module, overwrite_callback=None):
         if not isinstance(module, WebModule):
             raise Exception("Don't know how to handle module.")
-        self.__extract_file(path, module)
+        return self.__extract_file(path, module, overwrite_callback)
 
 class ApplicationDescriptor(object):
     def __init__(self, dom):
