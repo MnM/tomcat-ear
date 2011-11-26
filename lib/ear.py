@@ -30,6 +30,20 @@ def children(node, tagname=None):
 def text_child1(node, tagname, default=None):
     return first_text(children(node, tagname), default)
 
+class ZipMember(object):
+    def __init__(self, zipinfo):
+        self.assign_zipinfo(zipinfo)
+
+    def assign_zipinfo(self, zipinfo):
+        """Method for assigning zipinfo objects after this object has
+        been created. Useful for classes inheriting from this."""
+        self.filename = zipinfo.filename
+        self.basename = os.path.basename(self.filename)
+        self.crc = zipinfo.CRC
+
+    def __repr__(self):
+        return self.basename
+
 class Ear(object):
     application_xml_path = 'META-INF/application.xml'
 
@@ -44,11 +58,17 @@ class Ear(object):
         self.modules = self.application.modules
 
         # scan library-dir for libraries
-        self.libraries = filter(lambda x: x.startswith(self.application.library_directory) and x.endswith('.jar'), self.ear.namelist())
+        self.libraries = map(ZipMember,
+            filter(lambda x: x.filename.endswith('.jar') and
+                   x.filename.startswith(self.application.library_directory),
+                   self.ear.infolist()))
 
-        # check if all the modules are inside the archive
+        # check if all the modules are inside the archive and assign the
+        # underlying zipfile to the module
         for module in self.modules:
-            if not module.uri in self.ear.namelist():
+            try:
+                module.assign_zipinfo(self.ear.getinfo(module.uri))
+            except KeyError:
                 raise Exception("%s not found in EAR!" % module.uri)
 
     def __parse_application_xml(self):
@@ -58,18 +78,26 @@ class Ear(object):
         finally:
             f.close()
 
-    def __extract_file(self, path, member, skipExisting=True):
-        filename = os.path.basename(member)
+    def __open_zipmember(self, library):
+        return self.ear.open(library.filename)
+
+    def __extract_file(self, path, zipmember, skipExisting=True):
+        filename = zipmember.basename
         target_path = os.path.join(path, filename)
+
         if os.path.isfile(target_path) and skipExisting:
             return # skip if it already exists
+
         if not os.path.exists(path):
             os.makedirs(path) # create target directory if it doesn't exist
-        source = self.ear.open(member)
-        target = file(target_path, "wb")
-        shutil.copyfileobj(source, target)
-        source.close()
-        target.close()
+
+        try:
+            source = self.__open_zipmember(zipmember)
+            target = file(target_path, "wb")
+            shutil.copyfileobj(source, target)
+        finally:
+            source.close()
+            target.close()
 
     def extract_library(self, path, library):
         self.__extract_file(path, library)
@@ -77,7 +105,7 @@ class Ear(object):
     def extract_module(self, path, module):
         if not isinstance(module, WebModule):
             raise Exception("Don't know how to handle module.")
-        self.__extract_file(path, module.uri)
+        self.__extract_file(path, module)
 
 class ApplicationDescriptor(object):
     def __init__(self, dom):
@@ -100,16 +128,13 @@ class ApplicationDescriptor(object):
                         for node in children(deployment_nodes[0])]
         
     def __handle_module(self, module_node):
-        if module_node.nodeName == 'web':
-            return WebModule(module_node)
-        else:
-            return Module(module_node)
+        otype = WebModule if module_node.nodeName == 'web' else Module
+        return otype(module_node)
 
-class Module(object):
+class Module(ZipMember):
     def __init__(self, module_node):
         self.type = module_node.nodeName
         # TODO: uri
-    pass
 
 class WebModule(Module):
     # elements: web-uri, context-root
