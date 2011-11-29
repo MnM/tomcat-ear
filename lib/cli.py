@@ -1,6 +1,7 @@
 import os, sys
 from pprint import pformat
 
+from colourize import colourize, RED, BLACK, YELLOW
 from properties import parse_properties
 from ear import Ear, WebModule
 
@@ -9,14 +10,6 @@ import logging
 
 logging.basicConfig(format="%(message)s")
 log = logging.getLogger(__name__)
-
-BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
-RESET_SEQ = "\033[0m"
-COLOR_SEQ = "\033[1;%dm"
-BOLD_SEQ = "\033[1m"
-
-def colourize(s, colour):
-    return COLOR_SEQ % (30 + colour) + s + RESET_SEQ
 
 def debug(s):
     log.debug(colourize(s, BLACK))
@@ -28,7 +21,6 @@ def error(s, code=1):
     log.error(colourize(s, RED))
     if code:
         exit(code)
-
 ### end of logging stuff
 
 def mkpath(*args):
