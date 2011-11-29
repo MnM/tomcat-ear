@@ -61,14 +61,13 @@ class Ear(object):
         if bad_files:
             raise Exception("EAR is corrupt: %s" % bad_files)
 
-        # TODO: make application private
-        self.application = self.__parse_application_xml()
-        self.modules = self.application.modules
+        self.__application = self.__parse_application_xml()
+        self.modules = self.__application.modules
 
         # scan library-dir for libraries
         self.libraries = map(ZipMember,
             filter(lambda x: x.filename.endswith('.jar') and
-                   x.filename.startswith(self.application.library_directory),
+                   x.filename.startswith(self.__application.library_directory),
                    self.ear.infolist()))
 
         # check if all the modules are inside the archive and assign the
